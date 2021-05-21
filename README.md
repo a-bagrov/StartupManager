@@ -151,8 +151,18 @@ private IEnumerable<string> GetExeFileNames(ITaskFolder taskFolder)
     }
 }
 ```
+### Open explorer and select file
+Simple!
 
+```csharp
+public void OpenExplorerAt(string filePath)
+{
+    if (string.IsNullOrEmpty(filePath))
+		throw new ArgumentNullException(nameof(filePath));
 
+    Process.Start("explorer.exe", $"/select, \"{filePath}\"");
+}
+```
 
 
 
