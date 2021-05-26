@@ -13,7 +13,7 @@ In order to get digital signature of executable, *X509Certificate.CreateFromSign
 try
 {
     using var cert = X509Certificate.CreateFromSignedFile(exePath);
-    //digital signature exist, but it can be self signed
+    //digital signature exists, but it can be self signed
 }
 catch(CryptographicException)
 {
