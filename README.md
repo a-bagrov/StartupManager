@@ -2,7 +2,7 @@
 
 Simple startup manager that allows you to see list of programs running every boot time. Programs are collecting from registry, task scheduler, and startup folder. Also you can see digital signature of startup item and its correctness.
 
-This program has no dependencies, that cant be find is standard VS package, so only COM libs and pinvoking were used.
+This program has no dependencies, that cant be found is standard VS package, so only COM libs and pinvoking were used.
 
 ![program demonstation](https://i.ibb.co/Qp8RWBG/image.jpg)
 
