@@ -1,4 +1,5 @@
-﻿using StartupManager.Models;
+﻿using System;
+using StartupManager.Models;
 using System.Collections.Generic;
 
 namespace StartupManager.Interfaces
@@ -17,6 +18,7 @@ namespace StartupManager.Interfaces
     
     internal readonly struct StartupResult
     {
+
         public StartupResult(string result, bool isSuccess) : this()
         {
             Result = result;
@@ -28,5 +30,22 @@ namespace StartupManager.Interfaces
 
         public static bool operator ==(StartupResult a, StartupResult b) => a.Result == b.Result && a.IsSuccess == b.IsSuccess;
         public static bool operator !=(StartupResult a, StartupResult b) => !(a == b);
+        public bool Equals(StartupResult other)
+        {
+            return string.Equals(Result, other.Result, StringComparison.InvariantCulture) && IsSuccess == other.IsSuccess;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is StartupResult other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Result != null ? StringComparer.InvariantCulture.GetHashCode(Result) : 0) * 397) ^ IsSuccess.GetHashCode();
+            }
+        }
     }
 }
