@@ -15,13 +15,13 @@ namespace StartupManager.Implementation.ExeNamesProviders
         private const string UserStartupStartingAfterAppData = @"Microsoft\Windows\Start Menu\Programs\Startup";
         public StartupType StartupType => StartupType.StartMenu;
 
-        public IEnumerable<string> GetValues()
+        public IEnumerable<StartupResult> GetValues()
         {
             foreach (var c in GetValues(CommonStartup))
-                yield return c;
+                yield return new(c, true);
 
             foreach (var c in GetValues(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), UserStartupStartingAfterAppData)))
-                yield return c;
+                yield return new(c, true);
         }
 
         private IEnumerable<string> GetValues(string path)

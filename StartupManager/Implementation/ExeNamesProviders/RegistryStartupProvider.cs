@@ -30,13 +30,13 @@ namespace StartupManager.Implementation.ExeNamesProviders
 
         };
 
-        public IEnumerable<string> GetValues()
+        public IEnumerable<StartupResult> GetValues()
         {
             foreach (var c in GetFileNames(Registry.LocalMachine, _localMachineSubKeys))
-                yield return c;
+                yield return new(c, true);
 
             foreach (var c in GetFileNames(Registry.CurrentUser, _currUserSubKeys))
-                yield return c;
+                yield return new(c, true);
         }
 
         private IEnumerable<string> GetFileNames(RegistryKey entryKey, string[] paths)

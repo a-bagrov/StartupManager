@@ -1,11 +1,14 @@
 ﻿using StartupManager.Interfaces;
 using StartupManager.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Text;
+using System.Windows;
 
 namespace StartupManager.Implementation.Services
 {
@@ -43,6 +46,7 @@ namespace StartupManager.Implementation.Services
                 throw new ArgumentNullException(nameof(exeNameProviders));
 
             var result = new List<IStartupItem>();
+            ConcurrentBag<string> errors = new();
             await Task.Run(() =>
             {
                 ProgressChanged?.Invoke(this, new(0, null));
@@ -50,17 +54,23 @@ namespace StartupManager.Implementation.Services
                 var exeNameProvidersList = exeNameProviders.ToList();
                 var progressStep = 100d / exeNameProvidersList.Count;
                 var currProgress = 0d;
-
+                
                 foreach (var provider in exeNameProvidersList)
                 {
                     var values = provider.GetValues();
 
                     Parallel.ForEach(values, value =>
                     {
+                        if(value.IsSuccess == false)
+                        {
+                            errors.Add(value.Result);
+                            return;
+                        }
+                        
                         IStartupItem si = null;
                         try
                         {
-                            si = CreateStartupItem(iconProvider, fileInfoProvider, value, provider.StartupType);
+                            si = CreateStartupItem(iconProvider, fileInfoProvider, value.Result, provider.StartupType);
                         }
                         catch (Exception ex)
                         {
@@ -73,7 +83,6 @@ namespace StartupManager.Implementation.Services
                             {
                                 if (si != null)
                                     result.Add(si);
-
                             }
                         }
                     });
@@ -82,6 +91,17 @@ namespace StartupManager.Implementation.Services
                     ProgressChanged?.Invoke(this, new((int)currProgress, null));
                 }
             });
+
+            if (errors.Count != 0)
+            {
+                StringBuilder builder = new();
+                foreach (var error in errors)
+                {
+                    builder.AppendLine(error);
+                }
+
+                MessageBox.Show("Failed to get information about the following autorun items:", builder.ToString());
+            }
 
             return result;
         }

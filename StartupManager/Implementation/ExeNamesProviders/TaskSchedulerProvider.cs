@@ -4,6 +4,7 @@ using StartupManager.Models;
 using System.Collections.Generic;
 using TaskScheduler;
 using System.Linq;
+using System.Windows.Controls.Primitives;
 using StartupManager.Properties;
 
 namespace StartupManager.Implementation.ExeNamesProviders
@@ -15,7 +16,7 @@ namespace StartupManager.Implementation.ExeNamesProviders
     {
         public StartupType StartupType => StartupType.Scheduler;
 
-        public IEnumerable<string> GetValues()
+        public IEnumerable<StartupResult> GetValues()
         {
             var taskService = new TaskScheduler.TaskScheduler();
             taskService.Connect();
@@ -23,7 +24,7 @@ namespace StartupManager.Implementation.ExeNamesProviders
             return GetExeFileNames(taskService.GetFolder("\\"));
         }
 
-        private IEnumerable<string> GetExeFileNames(ITaskFolder taskFolder)
+        private IEnumerable<StartupResult> GetExeFileNames(ITaskFolder taskFolder)
         {
             //получить все таски включая скрытые
             var tasks = taskFolder.GetTasks((int)_TASK_ENUM_FLAGS.TASK_ENUM_HIDDEN);
@@ -34,29 +35,32 @@ namespace StartupManager.Implementation.ExeNamesProviders
 
                 ITaskDefinition def;
 
+                StartupResult result = default;
                 try
                 {
                     def = task.Definition;
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($@"{Resources.ErrorGettingTaskDefinition} {task.Path} {e}");
+                    result = new($@"{Resources.ErrorGettingTaskDefinition} {task.Path} {e}", false);
+                    Console.WriteLine(result);
                     continue;
                 }
 
-                if (!task.Enabled || def == null || def.Triggers.Count == 0 ||
-                    def.Actions.Count == 0)
+                if (result != default)
+                {
+                    yield return result;
+                    continue;
+                }
+
+                if (!task.Enabled || def == null || def.Triggers.Count == 0 || def.Actions.Count == 0)
                     continue;
 
                 //есть хотя бы один триггер при загрузке системы
+                // only show what is enabled and has a trigger of type boot
+                // todo: show what is disabled as well?
                 if (!def.Triggers.Cast<ITrigger>().Any(c => c.Enabled && c.Type == _TASK_TRIGGER_TYPE2.TASK_TRIGGER_BOOT))
                     continue;
-
-                foreach (IAction action in def.Actions)
-                {
-                    if (action.Type == _TASK_ACTION_TYPE.TASK_ACTION_EXEC && action is IExecAction execAction)
-                        yield return string.Join(" ", execAction.Path, execAction.Arguments);
-                }
             }
 
             var folders = taskFolder.GetFolders(0);
