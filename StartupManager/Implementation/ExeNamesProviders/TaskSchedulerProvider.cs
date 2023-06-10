@@ -1,8 +1,10 @@
-﻿using StartupManager.Interfaces;
+﻿using System;
+using StartupManager.Interfaces;
 using StartupManager.Models;
 using System.Collections.Generic;
 using TaskScheduler;
 using System.Linq;
+using StartupManager.Properties;
 
 namespace StartupManager.Implementation.ExeNamesProviders
 {
@@ -27,8 +29,23 @@ namespace StartupManager.Implementation.ExeNamesProviders
             var tasks = taskFolder.GetTasks((int)_TASK_ENUM_FLAGS.TASK_ENUM_HIDDEN);
             foreach (IRegisteredTask task in tasks)
             {
-                var def = task?.Definition;
-                if (task == null || !task.Enabled || def == null || def.Triggers.Count == 0 || def.Actions.Count == 0)
+                if (task is null)
+                    continue;
+
+                ITaskDefinition def;
+
+                try
+                {
+                    def = task.Definition;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($@"{Resources.ErrorGettingTaskDefinition} {task.Path} {e}");
+                    continue;
+                }
+
+                if (!task.Enabled || def == null || def.Triggers.Count == 0 ||
+                    def.Actions.Count == 0)
                     continue;
 
                 //есть хотя бы один триггер при загрузке системы
